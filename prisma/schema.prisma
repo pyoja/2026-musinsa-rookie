@@ -1,0 +1,63 @@
+// by jh 20260320: Prisma SQLite 스키마 정의 - 수강신청 시스템 5개 모델
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Department {
+  id         Int         @id @default(autoincrement())
+  name       String      @unique
+  professors Professor[]
+  students   Student[]
+  courses    Course[]
+}
+
+model Professor {
+  id           Int        @id @default(autoincrement())
+  name         String
+  departmentId Int
+  department   Department @relation(fields: [departmentId], references: [id])
+  courses      Course[]
+}
+
+model Student {
+  id            Int          @id @default(autoincrement())
+  name          String
+  studentNumber String       @unique
+  departmentId  Int
+  department    Department   @relation(fields: [departmentId], references: [id])
+  enrollments   Enrollment[]
+}
+
+model Course {
+  id           Int          @id @default(autoincrement())
+  name         String
+  credits      Int
+  capacity     Int
+  enrolled     Int          @default(0)
+  day          String       // MON, TUE, WED, THU, FRI
+  startTime    String       // "09:00"
+  endTime      String       // "10:30"
+  semester     String       // "2026-1"
+  professorId  Int
+  departmentId Int
+  professor    Professor    @relation(fields: [professorId], references: [id])
+  department   Department   @relation(fields: [departmentId], references: [id])
+  enrollments  Enrollment[]
+}
+
+model Enrollment {
+  id         Int      @id @default(autoincrement())
+  studentId  Int
+  courseId   Int
+  enrolledAt DateTime @default(now())
+  student    Student  @relation(fields: [studentId], references: [id])
+  course     Course   @relation(fields: [courseId], references: [id])
+
+  @@unique([studentId, courseId]) // by jh 20260320: 중복 수강신청 방지
+}
